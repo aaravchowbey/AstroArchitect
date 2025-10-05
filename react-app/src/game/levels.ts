@@ -1,12 +1,18 @@
 // src/game/levels.ts
 export type Level = {
-  id: "moon" | "transit" | "mars";
+  id: "tutorial" | "moon" | "transit" | "mars";
   title: string;
   blurb: string;
   durationHint: string;
 };
-
 export const LEVELS: Level[] = [
+  {
+    id: "tutorial",
+    title: "Tutorial: Getting Started",
+    blurb:
+      "A guided tutorial that teaches drawing walls, placing doors, using partitions, and assigning room types.",
+    durationHint: "—",
+  },
   {
     id: "moon",
     title: "Lunar Outpost (≤ 30 days)",
@@ -16,10 +22,10 @@ export const LEVELS: Level[] = [
   },
   {
     id: "transit",
-    title: "Deep-Space Transit (30–180 days)",
+    title: "Deep-Space Transit (30-180 days)",
     blurb:
       "Cruise phase. More permanence, good ventilation, window near exercise.",
-    durationHint: "30–180 days",
+    durationHint: "30-180 days",
   },
   {
     id: "mars",

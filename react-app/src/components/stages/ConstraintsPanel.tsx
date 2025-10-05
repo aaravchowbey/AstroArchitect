@@ -1,7 +1,7 @@
 // ConstraintsPanel.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useGrid } from "../grid/GridContext";
-import { STAGES, evaluateStage } from "./stages";
+import { getStagesForLevel, evaluateStage } from "./stages";
 
 type ConstraintsPanelProps = {
   levelId?: string;
@@ -10,15 +10,13 @@ type ConstraintsPanelProps = {
 export default function ConstraintsPanel({ levelId }: ConstraintsPanelProps) {
   const { rooms } = useGrid();
 
-  // Evaluate all stages from current grid state
-  const evals = useMemo(
-    () => STAGES.map((s) => evaluateStage(s, rooms)),
-    [rooms]
-  );
+  // Evaluate all stages from current grid state for the selected level
+  const stages = useMemo(() => getStagesForLevel(levelId), [levelId]);
+  const evals = useMemo(() => stages.map((s) => evaluateStage(s, rooms)), [rooms, stages]);
 
   // The first incomplete stage is the "active" one
   const activeIdx = evals.findIndex((e) => !e.complete);
-  const derivedOpenIdx = activeIdx === -1 ? STAGES.length - 1 : activeIdx;
+  const derivedOpenIdx = activeIdx === -1 ? stages.length - 1 : activeIdx;
 
   // Multi-expand support
   const [openSet, setOpenSet] = useState<Set<number>>(
@@ -35,7 +33,7 @@ export default function ConstraintsPanel({ levelId }: ConstraintsPanelProps) {
       return n;
     });
 
-  const openAll = () => setOpenSet(new Set(STAGES.map((_, i) => i)));
+  const openAll = () => setOpenSet(new Set(stages.map((_, i) => i)));
   const closeAll = () => setOpenSet(new Set());
 
   console.log("ConstraintsPanel received levelId:", levelId);
@@ -101,7 +99,7 @@ export default function ConstraintsPanel({ levelId }: ConstraintsPanelProps) {
 
       {/* Stages */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {STAGES.map((stage, i) => {
+        {stages.map((stage, i) => {
           const ev = evals[i];
           const locked = i > 0 && !evals[i - 1].complete; // strict unlock order
           const isOpen = openSet.has(i) && !locked;
@@ -261,15 +259,17 @@ export default function ConstraintsPanel({ levelId }: ConstraintsPanelProps) {
                     )}
                     <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
                       {ev.results.map(({ req, have, met }) => (
-                        <li key={req.type} style={{ marginBottom: 6 }}>
+                        <li key={req.type + (req.kind ?? "")} style={{ marginBottom: 6 }}>
                           <span
                             style={{
                               opacity: met ? 0.75 : 1,
                               fontSize: 13,
                             }}
                           >
-                            {met ? "✅" : "⬜️"} {req.type}: {have}/
-                            {req.atLeast}
+                            {met ? "✅" : "⬜️"} {req.type}:
+                            {req.kind === "roomCount" || req.kind === "minArea" ? (
+                              ` ${have}/${(req as any).atLeast}`
+                            ) : null}
                           </span>
                         </li>
                       ))}

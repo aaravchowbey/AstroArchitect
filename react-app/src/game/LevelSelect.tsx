@@ -1,4 +1,5 @@
 // src/game/LevelSelect.tsx
+import Header from "./Header";
 import { LEVELS } from "./levels";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +13,7 @@ export default function LevelSelect() {
       <div style={styles.starsLayer} />
       <div style={styles.starsLayer2} />
 
+      <Header />
       <main style={styles.main}>
         <h1 style={styles.title}>Select Your Mission</h1>
         <p style={styles.subtitle}>

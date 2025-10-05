@@ -18,7 +18,6 @@ const E_SOFT = 3;
 // visuals
 const DOOR_COLOR = "rgba(79,209,197,0.95)";
 const SOFT_COLOR = "rgba(255,255,255,0.82)";
-const BG_COLOR = "#0b1020";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
 const BOUNDS_STROKE = "rgba(80,200,255,0.6)";
 
@@ -34,6 +33,18 @@ const TYPE_COLORS: Record<string, string> = {
   Common: "#9AA2FF",
   Science: "#6EE7B7",
   Airlock: "#60A5FA",
+};
+const TYPE_EMOJI: Record<string, string> = {
+  Sleep: "🛏️",
+  Galley: "🍽️",
+  Hygiene: "🚿",
+  WCS: "🚽",
+  Exercise: "🏋️",
+  Control: "🖥️",
+  Storage: "📦",
+  Common: "🧑‍🚀",
+  Science: "🔬",
+  Airlock: "🛂",
 };
 
 type GridCanvasProps = {
@@ -65,7 +76,6 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
   );
 
   const { rooms, setRooms } = useGrid();
-  const [mode] = useState<"walls" | "pan">("walls"); // pan via middle mouse now
   const [tool, setTool] = useState<
     "wall" | "door" | "partition" | "eraser" | "pan"
   >("wall");
@@ -310,41 +320,12 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
         return { kind: "v", r, c };
       }
     };
-    const eraseEdgeAtWorld = (w: Vec) => {
-      const e = nearestEdge(w);
-      if (e.kind === "h") {
-        const r = e.r,
-          c = e.c;
-        if (
-          r >= 0 &&
-          r <= ROWS &&
-          c >= 0 &&
-          c < COLS &&
-          hEdges[r][c] !== E_EMPTY
-        ) {
-          setHEdges((prev) => {
-            const next = prev.map((row) => row.slice());
-            next[r][c] = E_EMPTY;
-            return next;
-          });
-        }
-      } else {
-        const r = e.r,
-          c = e.c;
-        if (
-          r >= 0 &&
-          r < ROWS &&
-          c >= 0 &&
-          c <= COLS &&
-          vEdges[r][c] !== E_EMPTY
-        ) {
-          setVEdges((prev) => {
-            const next = prev.map((row) => row.slice());
-            next[r][c] = E_EMPTY;
-            return next;
-          });
-        }
+    const roomTopLeftCell = (cells: Cell[]) => {
+      let best = cells[0];
+      for (const c of cells) {
+        if (c.r < best.r || (c.r === best.r && c.c < best.c)) best = c;
       }
+      return best; // { r, c }
     };
 
     const ghostFromEdge = (e: {
@@ -416,8 +397,8 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
 
     // ----- drawing -----
     const drawGrid = () => {
-      ctx.fillStyle = BG_COLOR;
-      ctx.fillRect(0, 0, width, height);
+      // don't draw an opaque background so the page-level background can show through
+      ctx.clearRect(0, 0, width, height);
 
       ctx.save();
       boundsPath();
@@ -663,7 +644,6 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
           }
         })();
         triGhost(ax, ay, bx, by, DOOR_COLOR, Math.max(1.8, w * 0.7));
-        return;
       }
 
       // partition span: per tile
@@ -717,6 +697,32 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
       );
       ctx.fill();
     };
+    const drawRoomEmojis = () => {
+      ctx.save();
+      boundsPath();
+      ctx.clip();
+
+      const scale = scaleRef.current;
+      const fontPx = Math.max(10, GRID * scale * 0.7);
+      ctx.font = `${fontPx}px ui-sans-serif, system-ui, Apple Color Emoji, Segoe UI Emoji`;
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+
+      for (const room of rooms) {
+        if (!room.type || !room.cells?.length) continue;
+        const emoji = TYPE_EMOJI[room.type];
+        if (!emoji) continue;
+
+        const { r, c } = roomTopLeftCell(room.cells);
+        const p = screenFromWorld(
+          worldOrigin.x + (c + 0.5) * GRID,
+          worldOrigin.y + (r + 0.5) * GRID
+        );
+        ctx.fillText(emoji, p.x, p.y);
+      }
+
+      ctx.restore();
+    };
 
     const draw = () => {
       drawGrid();
@@ -724,6 +730,7 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
       drawEdges();
       drawGhost();
       drawSnap();
+      drawRoomEmojis();
     };
 
     // ----- commit -----
@@ -1141,10 +1148,8 @@ export default function GridCanvas({ levelId }: GridCanvasProps) {
           <br />
           Wheel = zoom.
           <br />
-          Wall solid • Door 3 mini-segs • Partition 3 mini-segs per tile.
-          <br />
         </div>
-        <div>1/2/3/E to switch tools</div>
+        <div>1/2/3/E/Space to switch tools</div>
       </div>
     </>
   );

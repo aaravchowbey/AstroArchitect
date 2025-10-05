@@ -3,12 +3,12 @@ import { useState } from "react";
 type Dropped = { kind: "roomType" | "object"; id: string };
 
 const ROOM_TYPES = [
-  { id: "Sleep", label: "Sleep Quarters", icon: "🛌", color: "#7CC6FE" },
+  { id: "Sleep", label: "Sleep", icon: "🛌", color: "#7CC6FE" },
   { id: "Galley", label: "Galley", icon: "🍽️", color: "#FFD166" }, // (replaces 'Food')
   { id: "Hygiene", label: "Hygiene", icon: "🚿", color: "#95D5B2" },
   { id: "WCS", label: "WCS", icon: "🚽", color: "#FFFFFF" },
   { id: "Exercise", label: "Exercise", icon: "🏋️", color: "#EF476F" },
-  { id: "Control", label: "Control", icon: "🛰️", color: "#B8B8FF" },
+  { id: "Control", label: "Control", icon: "🖥️", color: "#B8B8FF" },
   { id: "Storage", label: "Storage", icon: "📦", color: "#F4A261" },
   { id: "Common", label: "Common Area", icon: "🧑‍🚀", color: "#9AA2FF" },
   { id: "Science", label: "Science Lab", icon: "🔬", color: "#6EE7B7" },
